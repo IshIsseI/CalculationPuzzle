@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -16,9 +18,18 @@ public class GameController : MonoBehaviour
     private Vector2 touchStartPos;
     private float touchHoldTime = 0f;
     private const float moveInterval = 0.2f;
+    private float countup = 0.0f;
+
+    public GameObject conText;
+    public GameObject timeText;
+    public GameObject clearText;
+    public GameObject menuButton;
 
     void Start()
     {
+        conText.SetActive(false);
+        clearText.SetActive(false);
+        menuButton.SetActive(false);
         CreateNumber();
         next = CreateOneNumber();
         CreateNowNumber(next);
@@ -28,6 +39,9 @@ public class GameController : MonoBehaviour
     void Update()
     {
         HandleInput();
+        CheckOBJ();
+        countup += Time.deltaTime;
+        timeText.GetComponent<TextMeshProUGUI>().text = countup.ToString("f1");
     }
 
     void CreateNumber()
@@ -50,10 +64,11 @@ public class GameController : MonoBehaviour
         number.transform.position = new Vector2(3.0f, 13.0f);
         next = CreateOneNumber();
         var number2 = Instantiate(Number[next]);
-        number2.transform.position = new Vector2(6.0f, 13.0f);
+        number2.transform.position = new Vector2(6.0f, 14.5f);
 
         activeNumber = number;
         nextNumber = number2;
+        ColorUnder();
         StartCoroutine(DropObject(number));
     }
 
@@ -79,11 +94,9 @@ public class GameController : MonoBehaviour
 
             if (obj.transform.position.y <= 0)
             {
-                int gridX = Mathf.RoundToInt(obj.transform.position.x);
-                int gridY = Mathf.RoundToInt(obj.transform.position.y);
-                obj.transform.position = new Vector3(gridX, 0, 0);
+                obj.transform.position = new Vector3((int)obj.transform.position.x, 0, 0);
 
-                numArray[gridX, 0] = obj;
+                numArray[(int)obj.transform.position.x, 0] = obj;
 
                 CheckNextTo(obj);
 
@@ -110,64 +123,97 @@ public class GameController : MonoBehaviour
                 switch (touch.phase)
                 {
                     case TouchPhase.Began:
-                        // タッチ開始位置を記録
                         touchStartPos = touch.position;
-                        touchHoldTime = 0f; // リセット
+                        touchHoldTime = 0f;
                         break;
 
                     case TouchPhase.Moved:
                     case TouchPhase.Stationary:
                         touchHoldTime += Time.deltaTime;
 
-                        // スワイプの移動量を計算
                         Vector2 swipeDelta = touch.position - touchStartPos;
 
-                        // 横方向のスワイプで左右移動
                         if (Mathf.Abs(swipeDelta.x) > Mathf.Abs(swipeDelta.y))
                         {
                             if (swipeDelta.x > 50 && currentPosition.x < 5)
                             {
-                                // 右方向に移動
                                 activeNumber.transform.position += new Vector3(1, 0, 0);
                                 touchStartPos = touch.position;
                                 touchHoldTime = 0f;
+                                ColorUnder();
                             }
                             else if (swipeDelta.x < -50 && currentPosition.x > 0)
                             {
-                                // 左方向に移動
                                 activeNumber.transform.position += new Vector3(-1, 0, 0);
                                 touchStartPos = touch.position;
                                 touchHoldTime = 0f;
+                                ColorUnder();
                             }
                         }
-                        else if (Mathf.Abs(swipeDelta.y) > Mathf.Abs(swipeDelta.x) && swipeDelta.y < -200) // 下方向のスワイプ
+                        else if (Mathf.Abs(swipeDelta.y) > Mathf.Abs(swipeDelta.x) && swipeDelta.y < -200)
                         {
-                            // Sキー相当の動作をトリガー
                             FastDrop();
                             touchStartPos = touch.position;
                             touchHoldTime = 0f;
+                            ColorUnder();
                         }
                         break;
 
                     case TouchPhase.Ended:
                     case TouchPhase.Canceled:
-                        // タッチが終わったら状態をリセット
                         touchHoldTime = 0f;
                         break;
                 }
+            }
+            if ((Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) && currentPosition.x > 0)
+            {
+                activeNumber.transform.position += new Vector3(-1, 0, 0);
+                ColorUnder();
+            }
+            if ((Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) && currentPosition.x < 5)
+            {
+                activeNumber.transform.position += new Vector3(1, 0, 0);
+                ColorUnder();
+            }
+            if ((Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) && currentPosition.y > 0)
+            {
+                FastDrop();
+                ColorUnder();
+            }
+        }
+    }
 
-                if ((Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) && currentPosition.x > 0)
+    void ColorUnder()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (numArray[x, y] != null)
                 {
-                    activeNumber.transform.position += new Vector3(-1, 0, 0);
+                    numArray[x, y].GetComponent<SpriteRenderer>().color = new Color(244f / 255f, 245f / 255f, 238f / 255f);
                 }
-                if ((Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) && currentPosition.x < 5)
-                {
-                    activeNumber.transform.position += new Vector3(1, 0, 0);
-                }
-                if ((Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) && currentPosition.y > 0)
-                {
-                    FastDrop();
-                }
+            }
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (numArray[(int)activeNumber.transform.position.x, 0] == null)
+            {
+                //ColorNextTo(null);
+                break;
+            }
+            else if (i < 5 && numArray[(int)activeNumber.transform.position.x, i] == null)
+            {
+                numArray[(int)activeNumber.transform.position.x, i - 1].GetComponent<SpriteRenderer>().color = new Color(240f / 255f, 86f / 255f, 123f / 255f);
+                ColorNextTo(numArray[(int)activeNumber.transform.position.x, i - 1]);
+                break;
+            }
+            else if (i == 5)
+            {
+                numArray[(int)activeNumber.transform.position.x, 4].GetComponent<SpriteRenderer>().color = new Color(240f / 255f, 86f / 255f, 123f / 255f);
+                ColorNextTo(numArray[(int)activeNumber.transform.position.x, 4]);
+                break;
             }
         }
     }
@@ -207,6 +253,35 @@ public class GameController : MonoBehaviour
             hitObject = hit.gameObject;
         }
         return hit != null;
+    }
+
+    void ColorNextTo(GameObject NgameObject)
+    {
+        if(NgameObject == null)
+        {
+            numArray[(int)activeNumber.transform.position.x + 1, 0].GetComponent<SpriteRenderer>().color = new Color(86f / 255f, 168f / 255f, 198f / 255f);
+            numArray[(int)activeNumber.transform.position.x - 1, 0].GetComponent<SpriteRenderer>().color = new Color(86f / 255f, 168f / 255f, 198f / 255f);
+            return;
+        }
+
+        Vector3 plusx = new Vector3(1.0f, 0, 0);
+        Vector3 plusy = new Vector3(0, 1.0f, 0);
+        Vector2[] position = new Vector2[3];
+        position[0] = NgameObject.transform.position + plusx;
+        position[1] = NgameObject.transform.position - plusx;
+        position[2] = NgameObject.transform.position - plusy;
+
+        for (int i = 0; i < position.Length; i++)
+        {
+            if (position[i].x >= 0 && position[i].x < width && position[i].y >= 0 && position[i].y < height)
+            {
+                if (numArray[(int)position[i].x, (int)position[i].y] != null)
+                {
+                    numArray[(int)position[i].x, (int)position[i].y].GetComponent<SpriteRenderer>().color = new Color(86f / 255f, 168f / 255f, 198f / 255f);
+                }
+            }
+
+        }
     }
 
     void CheckNextTo(GameObject NgameObject)
@@ -274,7 +349,7 @@ public class GameController : MonoBehaviour
         int gridY = Mathf.RoundToInt(plusNumber.transform.position.y);
         numArray[gridX, gridY] = plusNumber;
 
-        yield return null; // 次フレームまで待機
+        yield return null;
         Destroy(hitObject);
         Destroy(onOBJ);
         yield return new WaitForSeconds(0.5f);
@@ -283,6 +358,42 @@ public class GameController : MonoBehaviour
         activeNumber = null;
         nextNumber = null;
         CreateNowNumber(next);
+    }
+
+    void CheckOBJ()
+    {
+        bool isObj = false;
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (numArray[i, j] != null)
+                {
+                    isObj = true;
+                }
+            }
+        }
+
+        if (!isObj)
+        {
+            GameClear();
+        }
+    }
+
+    void GameClear()
+    {
+        Debug.Log("Game Clear");
+        clearText.SetActive(true);
+        menuButton.SetActive(true);
+        float clearTime = countup;
+        clearText.GetComponent<TextMeshProUGUI>().text = clearTime.ToString("f1");
+        Time.timeScale = 0;
+        conText.SetActive(true);
+    }
+
+    public void OnMenuButton()
+    {
+        SceneManager.LoadScene("MenuScene");
     }
 
 }

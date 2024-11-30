@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: -4419012569071283678}
   - component: {fileID: -5964316202066425025}
   - component: {fileID: -1963073842285101107}
+  - component: {fileID: 2291093205054335257}
   m_Layer: 0
   m_Name: ball_6
   m_TagString: 6
@@ -79,8 +80,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 1382711747, guid: 77f541f82016d489d8a1549851a9f285, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Sprite: {fileID: -843264037, guid: 8451a1c0c697547c2b51ad7acd1ac6d5, type: 3}
+  m_Color: {r: 0.9411765, g: 0.3372549, b: 0.48235294, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -166,3 +167,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   num: 6
+--- !u!114 &2291093205054335257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7413610846462187020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.6313726}
+  m_EffectDistance: {x: 10, y: 1}
+  m_UseGraphicAlpha: 0
